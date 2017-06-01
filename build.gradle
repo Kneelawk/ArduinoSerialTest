@@ -3,6 +3,17 @@ apply plugin: "eclipse"
 
 version = '0.0.1'
 
+ext.launcherMain = 'org.kneelawk.arduinoserialtest.ArduinoSerialTestLauncher'
+
+sourceSets {
+	launcher {
+		java {
+			srcDir 'src/launcher/java'
+			srcDir 'CPControl/src/main/java'
+		}
+	}
+}
+
 repositories {
 	jcenter()
 	maven {
@@ -16,3 +27,19 @@ dependencies {
 	compile 'com.github.scopt:scopt_2.12:3.5.0'
 	compile 'org.scala-lang:scala-library:2.12.2'
 }
+
+// builds the launch jar
+task launcherJar(type: Jar, dependsOn: [jar, launcherClasses]) {
+	manifest { attributes 'Main-Class': launcherMain }
+	baseName "${project.name}-all"
+	from(configurations.compile) { into 'libs' }
+	from('dependencies/natives') { into 'natives' }
+	from(jar.outputs.files) { into 'app' }
+	from(sourceSets.launcher.output)
+	from('LICENSE')
+
+	group 'Build'
+	description 'Creates a jar with all dependencies included.'
+}
+
+assemble.dependsOn launcherJar
